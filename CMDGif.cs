@@ -97,7 +97,7 @@ namespace CMDGif
                             }
                             break;
                         case FramingMode.Bounds:
-                            result = Bounds2.WithCorners(0f, 0f, 69f, 420f);
+                            result = bound;
                             break;
                         default:
                             new Exception("Undefined result mode... How'd you do this?");
@@ -118,7 +118,6 @@ namespace CMDGif
             {
                 if(arg.EndsWith(".solution"))
                 {
-                    Logger.Log("CMDGif: Found solution arg");
                     solution_name = arg;
                 } else if(arg.StartsWith("start=")) {
                     if(!int.TryParse(arg.Split('=')[1], out start_cycle)) {
@@ -154,7 +153,25 @@ namespace CMDGif
                             break;
                     }
                 } else if(arg.StartsWith("min=")) {
-                    var x = arg.Split('=')[1];
+                    string[] coords = arg.Split('=')[1].Split(',');
+                    if(!float.TryParse(coords[0], out bound.Min.X)) {
+                        Logger.Log("CMDGif: Error, speed not set to valid integer!");
+                        GameLogic.field_2434.method_963(0);
+                    }
+                    if(!float.TryParse(coords[1], out bound.Min.Y)) {
+                        Logger.Log("CMDGif: Error, speed not set to valid integer!");
+                        GameLogic.field_2434.method_963(0);
+                    }
+                } else if(arg.StartsWith(value: "max=")) {
+                    string[] coords = arg.Split('=')[1].Split(',');
+                    if(!float.TryParse(coords[0], out bound.Max.X)) {
+                        Logger.Log("CMDGif: Error, speed not set to valid integer!");
+                        GameLogic.field_2434.method_963(0);
+                    }
+                    if(!float.TryParse(coords[1], out bound.Max.Y)) {
+                        Logger.Log("CMDGif: Error, speed not set to valid integer!");
+                        GameLogic.field_2434.method_963(0);
+                    }
                 }
             }
 
