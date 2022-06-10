@@ -1,7 +1,7 @@
 # CMDGif
 
 ## Arguments
-* Any path pointing to a solution file will be interpretted as the desired solution
+* Any path pointing to a solution file will be interpreted as the desired solution
 * `start=<cycle>` Starts the gif at the specified cycle
 * `end=<cycle>` Ends the gif at the specified cycle
 * `fpc=<frames>` Sets the frames per cycle of the gif
