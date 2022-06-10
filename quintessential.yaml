@@ -1,0 +1,6 @@
+Name: CMDGif
+Version: 0.0.1
+DLL: "bin/Debug/net452/CMDGif.dll"
+Dependencies:
+- Name: Quintessential
+  Version: 0.3.0
