@@ -1,16 +1,10 @@
-﻿using MonoMod.ModInterop;
-using MonoMod.Utils;
+﻿using MonoMod.Utils;
 using Quintessential;
 using System;
-using Mono.Cecil;
 using Mono.Cecil.Cil;
-using MonoMod.RuntimeDetour.HookGen;
-using MonoMod.RuntimeDetour;
 using MonoMod.Cil;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Linq;
-using System.IO;
 
 namespace CMDGif
 {   
@@ -45,10 +39,10 @@ namespace CMDGif
                 )
             {
                 // Fucking anhilate this part of the function
-                cursor.RemoveRange(8);
-                // Cursed spot
+                cursor.RemoveRange(24);
+                // Convert Solution to bounds
                 cursor.EmitDelegate<Func<Solution, Bounds2>>((Solution solution) => {
-                    Bounds2 result= Bounds2.Empty;
+                    Bounds2 result = Bounds2.Empty;
                     switch(framing)
                     {
                         case FramingMode.Default:
@@ -67,8 +61,8 @@ namespace CMDGif
                             }
                             HashSet<HexIndex> hashSet = new HashSet<HexIndex>();
                             foreach(Part part in solution.method_1937())
-                            {
-                                if (part.method_1159().field_1554 || part.method_1159() != class_191.field_1782)
+                            {     // If part type != Marker
+                                if (part.method_1159() != class_191.field_1782)
                                 {
                                     continue;
                                 }
@@ -100,11 +94,29 @@ namespace CMDGif
                             result = bound;
                             break;
                         default:
-                            new Exception("Undefined result mode... How'd you do this?");
+                            new Exception("Undefined framing mode... How'd you do this?");
                             break;
                     }
                     return result;
                 });
+                cursor.Emit(OpCodes.Stloc_0);
+                cursor.Emit(OpCodes.Ldloc_0);
+                cursor.EmitDelegate<Func<Bounds2, float>>((Bounds2 bounds) => {
+                    float result = 1.0f;
+                        if(framing == FramingMode.Default){
+                            result = Math.Max(1f, Math.Max(bounds.Width / 802.0f, bounds.Height / 533.0f));
+                        } else {
+                            if(bounds.Width > 0 && bounds.Height > 0)
+                            {    
+                                result = Math.Max(bounds.Width / 802.0f, bounds.Height / 533.0f);
+                            } else 
+                            {
+                                result = Math.Max(1f, Math.Max(bounds.Width / 802.0f, bounds.Height / 533.0f));
+                            }
+                        }
+                    return result;
+                });
+                
             } else {
                 throw new Exception("Failed to modify bounds (Couldn't find solution loading)");
             }
