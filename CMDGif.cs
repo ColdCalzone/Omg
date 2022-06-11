@@ -5,6 +5,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System.Collections.Generic;
 using System.Reflection;
+using System.IO;
 
 namespace CMDGif
 {   
@@ -22,6 +23,7 @@ namespace CMDGif
     public class CMDGif : QuintessentialMod
     {
         public string solution_name = "";
+        public string file_out = "";
         public int start_cycle = -1;
         public int end_cycle = -1;
         public int frames_per_cycle = 6;
@@ -36,7 +38,7 @@ namespace CMDGif
             ILCursor cursor = new ILCursor(il);
             if(
                 cursor.TryGotoNext(MoveType.After, instr => instr.Match(OpCodes.Ldarg_1))
-                )
+            )
             {
                 // Fucking anhilate this part of the function
                 cursor.RemoveRange(24);
@@ -117,6 +119,25 @@ namespace CMDGif
                     return result;
                 });
                 
+                // Output file stuff
+                if(
+                    cursor.TryGotoNext(MoveType.Before, instr => instr.MatchCall(typeof(Path), "Combine"))
+                )  
+                {
+                    cursor.Remove();
+                    cursor.EmitDelegate<Func<string, string, string>>((string text3, string text2) => {
+                        if(file_out != "")
+                        {
+                            return file_out;
+                        } 
+                        else
+                        {
+                            return Path.Combine(text3, text2);
+                        }
+                    });
+                } else {
+                    throw new Exception("Failed to modify bounds (Couldn't modify output file)");
+                }
             } else {
                 throw new Exception("Failed to modify bounds (Couldn't find solution loading)");
             }
@@ -131,6 +152,8 @@ namespace CMDGif
                 if(arg.EndsWith(".solution"))
                 {
                     solution_name = arg;
+                } else if(arg.StartsWith("out=")) {
+                    file_out = arg.Split('=')[1];
                 } else if(arg.StartsWith("start=")) {
                     if(!int.TryParse(arg.Split('=')[1], out start_cycle)) {
                         Logger.Log("CMDGif: Error, start cycle not set to valid integer!");
