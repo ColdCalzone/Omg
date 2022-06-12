@@ -6,12 +6,10 @@ using MonoMod.Cil;
 using System.Collections.Generic;
 using System.Reflection;
 using System.IO;
+using MonoMod.RuntimeDetour;
 
 namespace CMDGif
-{   
-    using BondType = enum_126;
-    using BondStyle = class_200;
-    using BondStyles = class_167; 
+{
 
     public enum FramingMode
     {
@@ -48,6 +46,7 @@ namespace CMDGif
                     switch(framing)
                     {
                         case FramingMode.Default:
+                            // If it this is a production puzzle, expand by a set amount
                             if (solution.method_1934().field_2779.method_1085())
                             {
                                 result = solution.method_1934().field_2779.method_1087().field_2074.Expanded(125f, 125f, 125f, 75f);
@@ -56,11 +55,13 @@ namespace CMDGif
                             result = solution.method_1955().Expanded(75f, 75f);
                             break;
                         case FramingMode.Equilibrium:
+                            // don't do anything weird for production puzzles
                             if (solution.method_1934().field_2779.method_1085())
                             {
                                 result = solution.method_1934().field_2779.method_1087().field_2074.Expanded(125f, 125f, 125f, 75f);
                                 break;
                             }
+                            // This is a modified version of Solution.method_1955 which only targets Glyphs of Eq. 
                             HashSet<HexIndex> hashSet = new HashSet<HexIndex>();
                             foreach(Part part in solution.method_1937())
                             {     // If part type != Marker
@@ -101,8 +102,10 @@ namespace CMDGif
                     }
                     return result;
                 });
+                // loc.0 is used later in the method so it has to be stored & loaded
                 cursor.Emit(OpCodes.Stloc_0);
                 cursor.Emit(OpCodes.Ldloc_0);
+                // Uncap zooming for custom framing modes
                 cursor.EmitDelegate<Func<Bounds2, float>>((Bounds2 bounds) => {
                     float result = 1.0f;
                         if(framing == FramingMode.Default){
@@ -143,10 +146,68 @@ namespace CMDGif
             }
         }
 
-        public override void Load() {
-            // IL.GameLogic.method_956 += OnLoadSingletons;
-            IL.class_250.ctor += class250_ctor;
+        // Wacky attempt to speed up loading by throwing some singletons down the drain
+        //... didn't work.
+        // If someone can figure out how to cut out texture loading properly (my attmpt made Nothing Good Happen)
+        //then that would be pog
+        public void GameLogicInitSingletons(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            cursor.RemoveRange(12);
+            cursor.EmitDelegate<Action>(() => {
+                if(solution_name != "") {
+                    class_134.method_248();
+                    class_175.method_248();
+                    class_167.method_471();
+                    class_191.method_496();
+                    class_169.method_476();
+                    class_214.method_558();
+                    Puzzles.method_1285();
+                    class_172.method_480();
+                    Campaigns.method_828();
+                    JournalVolumes.method_1052();
+                    // class_107.method_143();
+                }
+                else
+                {
+                    class_134.method_248();
+                    Transitions.method_2181();
+                    class_175.method_248();
+                    class_167.method_471();
+                    class_191.method_496();
+                    class_169.method_476();
+                    class_214.method_558();
+                    Puzzles.method_1285();
+                    class_172.method_480();
+                    Campaigns.method_828();
+                    JournalVolumes.method_1052();
+                    class_107.method_143();
+                }
+            });
+        }
 
+        void class250_method_50(On.class_250.orig_method_50 orig, class_250 self, float param)
+        {
+            orig(self, param);
+            if(!(bool)typeof(class_250).GetField("field_2026", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(self)) return;
+            foreach(string arg in Environment.GetCommandLineArgs())
+            {
+                if(arg.EndsWith(".solution"))
+                {
+                    Logger.Log("CMDGif: Successfully created, closing the game...");
+                    GameLogic.field_2434.method_963(0);
+                }
+            }
+        }
+
+        public ILHook GameLogic_method_956;
+
+        public override void Load() {
+            IL.class_250.ctor += class250_ctor;
+            GameLogic_method_956 = new ILHook(typeof(GameLogic).GetMethod("orig_method_956", BindingFlags.Instance | BindingFlags.NonPublic), 
+                                            GameLogicInitSingletons);
+            
+            // Parse command line arguments
             foreach(string arg in Environment.GetCommandLineArgs())
             {
                 if(arg.EndsWith(".solution"))
@@ -210,19 +271,7 @@ namespace CMDGif
                 }
             }
 
-            On.class_250.method_50 += (orig, self, param) =>
-            {
-                orig(self, param);
-                if(!(bool)typeof(class_250).GetField("field_2026", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(self)) return;
-                foreach(string arg in Environment.GetCommandLineArgs())
-                {
-                    if(arg.EndsWith(".solution"))
-                    {
-                        Logger.Log("CMDGif: Successfully created, closing the game...");
-                        GameLogic.field_2434.method_963(0);
-                    }
-                }
-            };
+            On.class_250.method_50 += class250_method_50;
         }
 
         public override void LoadPuzzleContent() {
@@ -259,8 +308,9 @@ namespace CMDGif
         
 
         public override void Unload() {
-            // IL.GameLogic.method_956 -= OnLoadSingletons;
+            GameLogic_method_956.Dispose();
             IL.class_250.ctor -= class250_ctor;
+            On.class_250.method_50 -= class250_method_50;
         }
     }
 }
