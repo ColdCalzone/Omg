@@ -8,7 +8,7 @@ using System.Reflection;
 using System.IO;
 using MonoMod.RuntimeDetour;
 
-namespace CMDGif
+namespace Omg
 {
 
     public enum FramingMode
@@ -18,7 +18,7 @@ namespace CMDGif
         Bounds,
     }
 
-    public class CMDGif : QuintessentialMod
+    public class Omg : QuintessentialMod
     {
         public string solution_name = "";
         public string file_out = "";
@@ -194,7 +194,7 @@ namespace CMDGif
             {
                 if(arg.EndsWith(".solution"))
                 {
-                    Logger.Log("CMDGif: Successfully created, closing the game...");
+                    Logger.Log("Omg: Successfully created, closing the game...");
                     GameLogic.field_2434.method_963(0);
                 }
             }
@@ -217,22 +217,22 @@ namespace CMDGif
                     file_out = arg.Split('=')[1];
                 } else if(arg.StartsWith("start=")) {
                     if(!int.TryParse(arg.Split('=')[1], out start_cycle)) {
-                        Logger.Log("CMDGif: Error, start cycle not set to valid integer!");
+                        Logger.Log("Omg: Error, start cycle not set to valid integer!");
                         GameLogic.field_2434.method_963(0);
                     }
                 } else if(arg.StartsWith("end=")) {
                     if(!int.TryParse(arg.Split('=')[1], out end_cycle)) {
-                        Logger.Log("CMDGif: Error, end cycle not set to valid integer!");
+                        Logger.Log("Omg: Error, end cycle not set to valid integer!");
                         GameLogic.field_2434.method_963(0);
                     }
                 } else if(arg.StartsWith("fpc=")) {
                     if(!int.TryParse(arg.Split('=')[1], out frames_per_cycle)) {
-                        Logger.Log("CMDGif: Error, frames per cycle not set to valid integer!");
+                        Logger.Log("Omg: Error, frames per cycle not set to valid integer!");
                         GameLogic.field_2434.method_963(0);
                     }
                 } else if(arg.StartsWith("speed=")) {
                     if(!int.TryParse(arg.Split('=')[1], out speed)) {
-                        Logger.Log("CMDGif: Error, speed not set to valid integer!");
+                        Logger.Log("Omg: Error, speed not set to valid integer!");
                         GameLogic.field_2434.method_963(0);
                     }
                 } else if(arg.StartsWith("framing=")) {
@@ -251,21 +251,21 @@ namespace CMDGif
                 } else if(arg.StartsWith("min=")) {
                     string[] coords = arg.Split('=')[1].Split(',');
                     if(!float.TryParse(coords[0], out bound.Min.X)) {
-                        Logger.Log("CMDGif: Error, speed not set to valid integer!");
+                        Logger.Log("Omg: Error, speed not set to valid integer!");
                         GameLogic.field_2434.method_963(0);
                     }
                     if(!float.TryParse(coords[1], out bound.Min.Y)) {
-                        Logger.Log("CMDGif: Error, speed not set to valid integer!");
+                        Logger.Log("Omg: Error, speed not set to valid integer!");
                         GameLogic.field_2434.method_963(0);
                     }
                 } else if(arg.StartsWith(value: "max=")) {
                     string[] coords = arg.Split('=')[1].Split(',');
                     if(!float.TryParse(coords[0], out bound.Max.X)) {
-                        Logger.Log("CMDGif: Error, speed not set to valid integer!");
+                        Logger.Log("Omg: Error, speed not set to valid integer!");
                         GameLogic.field_2434.method_963(0);
                     }
                     if(!float.TryParse(coords[1], out bound.Max.Y)) {
-                        Logger.Log("CMDGif: Error, speed not set to valid integer!");
+                        Logger.Log("Omg: Error, speed not set to valid integer!");
                         GameLogic.field_2434.method_963(0);
                     }
                 }

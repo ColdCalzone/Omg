@@ -1,6 +1,6 @@
-Name: CMDGif
+Name: OMG
 Version: 1.2.0
-DLL: "bin/Debug/net452/CMDGif.dll"
+DLL: "bin/Debug/net452/OMG.dll"
 Dependencies:
 - Name: Quintessential
   Version: 0.3.0
