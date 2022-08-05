@@ -1,5 +1,5 @@
 # OMG
-## (Opus Magnum Gif-CMD)
+### (Opus Magnum Gif-CMD)
 
 ## Arguments
 * Any path pointing to a solution file will be interpreted as the desired solution

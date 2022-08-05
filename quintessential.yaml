@@ -1,6 +1,6 @@
 Name: OMG
 Version: 1.2.0
-DLL: "bin/Debug/net452/OMG.dll"
+DLL: "bin/Debug/net452/Omg.dll"
 Dependencies:
 - Name: Quintessential
   Version: 0.3.0
