@@ -186,17 +186,49 @@ namespace Omg
             });
         }
 
-        void class250_method_50(On.class_250.orig_method_50 orig, class_250 self, float param)
+        public void RemoveMarkOnFrame(ILContext il)
         {
-            orig(self, param);
-            if(!(bool)typeof(class_250).GetField("field_2026", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(self)) return;
-            foreach(string arg in Environment.GetCommandLineArgs())
+            ILCursor cursor = new ILCursor(il);
+
+            if(
+                cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall(typeof(class_250), "MarkOnFrame"))
+            ) {
+                cursor.Remove();
+            }
+        }
+
+        void class250_method_50(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            if(QuintessentialLoader.CodeMods.Count <= 2)
             {
-                if(arg.EndsWith(".solution"))
+                if(cursor.TryGotoNext(
+                    MoveType.Before, 
+                    instr => instr.MatchCall(typeof(class_250), "MarkOnFrame")
+                ))
                 {
-                    Logger.Log("Omg: Successfully created, closing the game...");
-                    GameLogic.field_2434.method_963(0);
+                    Logger.Log("Omg: No other mods detected, removing mark.");
+                    cursor.Remove();
                 }
+            }
+            if (
+                cursor.TryGotoNext(MoveType.Before,
+                instr => instr.Match(OpCodes.Ret))
+            ) {
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldfld, typeof(class_250).GetField("field_2026", BindingFlags.Instance | BindingFlags.NonPublic));
+                
+                cursor.EmitDelegate<Action<bool>>((bool field_2026) => {
+                    if (!field_2026) return;
+                    foreach(string arg in Environment.GetCommandLineArgs())
+                    {
+                        if(arg.EndsWith(".solution"))
+                        {
+                            Logger.Log("Omg: Successfully created, closing the game...");
+                            GameLogic.field_2434.method_963(0);
+                        }
+                    }
+                });
             }
         }
 
@@ -270,8 +302,7 @@ namespace Omg
                     }
                 }
             }
-
-            On.class_250.method_50 += class250_method_50;
+            IL.class_250.method_50 += class250_method_50;
         }
 
         public override void LoadPuzzleContent() {
@@ -310,7 +341,7 @@ namespace Omg
         public override void Unload() {
             GameLogic_method_956.Dispose();
             IL.class_250.ctor -= class250_ctor;
-            On.class_250.method_50 -= class250_method_50;
+            IL.class_250.method_50 -= class250_method_50;
         }
     }
 }
