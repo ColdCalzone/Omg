@@ -191,8 +191,6 @@ namespace Omg
             }
         }
 
-        public ILHook GameLogic_method_956;
-
         public override void Load() {
             IL.class_250.ctor += class250_ctor;
             
@@ -296,7 +294,6 @@ namespace Omg
         
 
         public override void Unload() {
-            GameLogic_method_956.Dispose();
             IL.class_250.ctor -= class250_ctor;
             IL.class_250.method_50 -= class250_method_50;
         }
