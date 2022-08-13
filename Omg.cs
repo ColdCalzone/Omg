@@ -145,47 +145,6 @@ namespace Omg
                 throw new Exception("Failed to modify bounds (Couldn't find solution loading)");
             }
         }
-
-        // Wacky attempt to speed up loading by throwing some singletons down the drain
-        //... didn't work.
-        // If someone can figure out how to cut out texture loading properly (my attmpt made Nothing Good Happen)
-        //then that would be pog
-        public void GameLogicInitSingletons(ILContext il)
-        {
-            ILCursor cursor = new ILCursor(il);
-            cursor.RemoveRange(12);
-            cursor.EmitDelegate<Action>(() => {
-                if(solution_name != "") {
-                    class_134.method_248();
-                    class_175.method_248();
-                    class_167.method_471();
-                    class_191.method_496();
-                    class_169.method_476();
-                    class_214.method_558();
-                    Puzzles.method_1285();
-                    class_172.method_480();
-                    Campaigns.method_828();
-                    JournalVolumes.method_1052();
-                    // class_107.method_143();
-                }
-                else
-                {
-                    class_134.method_248();
-                    Transitions.method_2181();
-                    class_175.method_248();
-                    class_167.method_471();
-                    class_191.method_496();
-                    class_169.method_476();
-                    class_214.method_558();
-                    Puzzles.method_1285();
-                    class_172.method_480();
-                    Campaigns.method_828();
-                    JournalVolumes.method_1052();
-                    class_107.method_143();
-                }
-            });
-        }
-
         public void RemoveMarkOnFrame(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
@@ -236,8 +195,6 @@ namespace Omg
 
         public override void Load() {
             IL.class_250.ctor += class250_ctor;
-            GameLogic_method_956 = new ILHook(typeof(GameLogic).GetMethod("orig_method_956", BindingFlags.Instance | BindingFlags.NonPublic), 
-                                            GameLogicInitSingletons);
             
             // Parse command line arguments
             foreach(string arg in Environment.GetCommandLineArgs())
