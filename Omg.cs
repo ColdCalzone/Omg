@@ -269,6 +269,9 @@ namespace Omg
                 Maybe<Solution> maybeSolution = Solution.method_1958(solution_name);
                 class_162.method_403(maybeSolution.method_1085(), "Failed to load solution file.");
                 Solution solution = maybeSolution.method_1087();
+                
+                GameLogic.field_2434.field_2458.method_1377(solution.method_1934(), maybeSolution);
+                
                 var class250Type = typeof(class_250);
                 // Thanks, GuiltyBystander!
                 DynData<class_250> class250 = (new DynData<class_250>(null));
