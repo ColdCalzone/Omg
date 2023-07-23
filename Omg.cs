@@ -20,7 +20,11 @@ namespace Omg
 
     public class Omg : QuintessentialMod
     {
-        public string solution_name = "";
+        public struct SolutionOutput {
+            public string solution_name;
+            public string file_out;
+        }
+        public List<SolutionOutput> solutions = new List<SolutionOutput>();
         public string file_out = "";
         public int start_cycle = -1;
         public int end_cycle = -1;
@@ -28,6 +32,8 @@ namespace Omg
         public int speed = 5;
 
         public Bounds2 bound = Bounds2.Empty;
+
+        public bool recordCrash = false;
 
         public FramingMode framing = FramingMode.Default;
 
@@ -133,10 +139,7 @@ namespace Omg
                         {
                             return file_out;
                         } 
-                        else
-                        {
-                            return Path.Combine(text3, text2);
-                        }
+                        return Path.Combine(text3, text2);
                     });
                 } else {
                     throw new Exception("Failed to modify bounds (Couldn't modify output file)");
@@ -170,6 +173,29 @@ namespace Omg
                     cursor.Remove();
                 }
             }
+
+            // Crash the game when a solution crashes
+            if(
+                recordCrash &&
+                cursor.TryGotoNext(MoveType.After, instr => instr.Match(OpCodes.Endfinally)) &&
+                cursor.TryGotoNext(MoveType.Before, instr => instr.Match(OpCodes.Brtrue_S)) &&
+                cursor.TryGotoNext(MoveType.Before, instr => instr.Match(OpCodes.Brtrue_S)) &&
+                cursor.TryGotoNext(MoveType.Before, instr => instr.Match(OpCodes.Brtrue_S))
+            ) {
+                cursor.GotoLabel(((ILLabel)cursor.Next.Operand));
+                
+                cursor.EmitDelegate<Action>(() => {
+                    foreach(string arg in Environment.GetCommandLineArgs())
+                    {
+                        if(arg.EndsWith(".solution"))
+                        {
+                            Logger.Log("Omg: Solution crashed, closing the game...");
+                            GameLogic.field_2434.method_963(0);
+                        }
+                    }
+                });
+            }
+
             if (
                 cursor.TryGotoNext(MoveType.Before,
                 instr => instr.Match(OpCodes.Ret))
@@ -199,9 +225,14 @@ namespace Omg
             {
                 if(arg.EndsWith(".solution"))
                 {
-                    solution_name = arg;
+                    solutions.Add(new SolutionOutput {
+                        solution_name = arg,
+                        file_out = ""
+                    });
                 } else if(arg.StartsWith("out=")) {
-                    file_out = arg.Split('=')[1];
+                    SolutionOutput s = solutions[solutions.Count - 1];
+                    s.file_out = arg.Split('=')[1];
+                    solutions[solutions.Count - 1] = s;
                 } else if(arg.StartsWith("start=")) {
                     if(!int.TryParse(arg.Split('=')[1], out start_cycle)) {
                         Logger.Log("Omg: Error, start cycle not set to valid integer!");
@@ -226,8 +257,10 @@ namespace Omg
                     switch(arg.Split('=')[1])
                     {
                         case "eq":
+                        case "equilibrium":
                             framing = FramingMode.Equilibrium;
                             break;
+                        case "bound":
                         case "bounds":
                             framing = FramingMode.Bounds;
                             break;
@@ -238,23 +271,25 @@ namespace Omg
                 } else if(arg.StartsWith("min=")) {
                     string[] coords = arg.Split('=')[1].Split(',');
                     if(!float.TryParse(coords[0], out bound.Min.X)) {
-                        Logger.Log("Omg: Error, speed not set to valid integer!");
+                        Logger.Log("Omg: Error, min X not set to valid number!");
                         GameLogic.field_2434.method_963(0);
                     }
                     if(!float.TryParse(coords[1], out bound.Min.Y)) {
-                        Logger.Log("Omg: Error, speed not set to valid integer!");
+                        Logger.Log("Omg: Error, min Y not set to valid number!");
                         GameLogic.field_2434.method_963(0);
                     }
-                } else if(arg.StartsWith(value: "max=")) {
+                } else if(arg.StartsWith("max=")) {
                     string[] coords = arg.Split('=')[1].Split(',');
                     if(!float.TryParse(coords[0], out bound.Max.X)) {
-                        Logger.Log("Omg: Error, speed not set to valid integer!");
+                        Logger.Log("Omg: Error, max X not set to valid number!");
                         GameLogic.field_2434.method_963(0);
                     }
                     if(!float.TryParse(coords[1], out bound.Max.Y)) {
-                        Logger.Log("Omg: Error, speed not set to valid integer!");
+                        Logger.Log("Omg: Error, max Y not set to valid number!");
                         GameLogic.field_2434.method_963(0);
                     }
+                } else if(arg.StartsWith("--recordcrash")) {
+                    recordCrash = true;
                 }
             }
             IL.class_250.method_50 += class250_method_50;
@@ -264,9 +299,10 @@ namespace Omg
         }
 
         public override void PostLoad() {
-            if(solution_name != "")
+            foreach(SolutionOutput s in solutions)
             {
-                Maybe<Solution> maybeSolution = Solution.method_1958(solution_name);
+                file_out = s.file_out;
+                Maybe<Solution> maybeSolution = Solution.method_1958(s.solution_name);
                 class_162.method_403(maybeSolution.method_1085(), "Failed to load solution file.");
                 Solution solution = maybeSolution.method_1087();
                 
